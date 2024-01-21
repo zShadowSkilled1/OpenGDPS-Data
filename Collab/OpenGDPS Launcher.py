@@ -139,28 +139,35 @@ def OpenWebside():
 
 root = Tk()
 root.geometry('420x300')
-root.title
+root.title("OpenGDPS")
+
+# Function to update the status text
+update_status_var = StringVar()
+update_status_var.set("Ready")
+update_status_label = Label(root, textvariable=update_status_var)
+update_status_label.pack()
 
 OpenGDPS = Label(root, text="OpenGDPS")
 OpenGDPS.pack()
 
-#Launch button
-launchButton = Button(root, text="OpenGDPS", command=launch)
-launchButton.pack()
-# Get Version
-getVersionBtn = Button(root, text="get Version", command=getVersion)
-getVersionBtn.pack()
+# Launch button
+launchButton = Button(root, text="Launch OpenGDPS", command=launch, width=20)
+launchButton.pack(side=TOP, pady=5)
 
-# createDataFolderBtn = Button(root, text="create Data Folder", command=createDataFolder)
-# createDataFolderBtn.pack()
+# Get Version button
+getVersionBtn = Button(root, text="Get Version", command=getVersion, width=20)
+getVersionBtn.pack(side=TOP, pady=5)
 
-checkUpdateBtn = Button(root, text="check Update", command=checkUpdate)
-checkUpdateBtn.pack()
+# Check Update button
+checkUpdateBtn = Button(root, text="Check Update", command=checkUpdate, width=20)
+checkUpdateBtn.pack(side=TOP, pady=5)
 
-OpenDiscordbtn = Button(root, text="Buage. Discord", command=OpenDiscord)
-OpenDiscordbtn.pack()
+# Discord button
+OpenDiscordbtn = Button(root, text="Buage. Discord", command=OpenDiscord, width=20)
+OpenDiscordbtn.pack(side=TOP, pady=5)
 
-Website = Button(root, text="Webside", command=OpenWebside)
-Website.pack()
+# Website button
+Website = Button(root, text="Website", command=OpenWebside, width=20)
+Website.pack(side=TOP, pady=5)
 
 root.mainloop()
