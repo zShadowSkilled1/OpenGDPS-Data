@@ -1,9 +1,16 @@
-import requests
 import os
-import urllib
+import urllib.request
 import shutil
-from zipfile import ZipFile
+import zipfile
+from zipfile import *
+import requests
+import io
+from tkinter import *
+import webbrowser
 import subprocess
+import time
+import threading
+from os import path
 
 updateUrl = ""
 
@@ -11,6 +18,8 @@ appData = os.getenv('APPDATA')
 openGDPSDir = appData + "\OpenGDPSLauncher"
 
 def launch():
+    createDataFolder()
+    checkUpdate()
     openGDPS_directory = os.path.join(openGDPSDir, "OpenGDPS")
 
     # Find OpenGDPS.exe within the OpenGDPS directory
@@ -18,12 +27,23 @@ def launch():
     for root, dirs, files in os.walk(openGDPS_directory):
         for file in files:
             if file.lower() == "opengdps.exe":
+                startDir = root
                 exe_file_path = os.path.join(root, file)
-                break
+                exeFile = file
 
     if exe_file_path:
         print(f"Launching OpenGDPS: {exe_file_path}")
-        subprocess.Popen(exe_file_path)
+        print(f'Current Working Directory: {startDir}')
+        print(f'Executable Name: {exeFile}')
+        
+        dirCommand = startDir.replace('\\', "/")
+        launchCommand = f'{exeFile}'
+
+        commands = [dirCommand, launchCommand]
+
+        print(f'Launch Command: {launchCommand} {dirCommand}')
+        os.chdir(dirCommand)
+        subprocess.call(exeFile)
     else:
         print("OpenGDPS.exe not found.")
 
@@ -47,10 +67,33 @@ def createDataFolder():
         openGDPSDataContent = getVersion()
         openGDPSData.write(openGDPSDataContent)
 
+def download_and_unzip_update(update_url, update_path, openGDPS_directory):
+    try:
+        # Download the update
+        update_response = urllib.request.urlopen(update_url)
+        with open(update_path, "wb") as update_zip:
+            update_zip.write(update_response.read())
+
+        # Unzip the update
+        with ZipFile(update_path, 'r') as zip_ref:
+            zip_ref.extractall(openGDPS_directory)
+
+        # Update the version file
+        with open(os.path.join(openGDPSDir, "currentVersion.txt"), "w") as openGDPSData:
+            openGDPSData.write(getVersion())
+            openGDPSData.close()
+
+
+        print('Update completed.')
+        print('Launching OpenGDPS.')
+        launch()
+    except Exception as e:
+        print(f"Error during update: {e}")
+
 def checkUpdate():
     # Get the latest version from the GitHub repository
-    version_response = requests.get("https://raw.githubusercontent.com/zShadowSkilled1/OpenGDPS-Data/main/Data/version.txt")
-    latest_version = version_response.text.strip()
+    version_response = urllib.request.urlopen("https://raw.githubusercontent.com/zShadowSkilled1/OpenGDPS-Data/main/Data/version.txt")
+    latest_version = version_response.read().decode('utf-8').strip()
 
     # Read the current version from the local file
     current_version_path = os.path.join(openGDPSDir, "currentVersion.txt")
@@ -67,33 +110,57 @@ def checkUpdate():
 
         # Remove all files and folders in the OpenGDPS directory
         openGDPS_directory = os.path.join(openGDPSDir, "OpenGDPS")
+
+        # Deleting contents of the OpenGDPS directory
         for root, dirs, files in os.walk(openGDPS_directory):
             for file in files:
                 file_path = os.path.join(root, file)
                 os.remove(file_path)
-                print("Removed file:", file)
+            for dir in dirs:
+                dir_path = os.path.join(root, dir)
+                shutil.rmtree(dir_path)
 
-            for directory in dirs:
-                dir_path = os.path.join(root, directory)
-                os.rmdir(dir_path)
-                print("Removed directory:", directory)
-
-        # Download and unzip the update
-        endpoint = requests.get("https://raw.githubusercontent.com/zShadowSkilled1/OpenGDPS-Data/main/Data/updateUrl.txt")
-        update_url = endpoint.text
+        # Download and unzip the update in a separate thread
+        update_url_response = urllib.request.urlopen("https://raw.githubusercontent.com/zShadowSkilled1/OpenGDPS-Data/main/Data/updateUrl.txt")
+        update_url = update_url_response.read().decode('utf-8').strip()
         update_path = os.path.join(openGDPSDir, "update.zip")
 
-        update_response = requests.get(update_url)
+        # Create a thread for downloading and unzipping the update
+        update_thread = threading.Thread(target=download_and_unzip_update, args=(update_url, update_path, openGDPS_directory))
+        update_thread.start()
 
-        with open(update_path, "wb") as update_zip:
-            update_zip.write(update_response.content)
+        print('Update process started in the background.')
 
-        # Unzip the update
-        with ZipFile(update_path, 'r') as zip_ref:
-            zip_ref.extractall(openGDPS_directory)
+def OpenDiscord():
+    webbrowser.open("https://discord.gg/V6z24dRf")
 
-        print('Update completed.')
-        print('Launching OpenGDPS.')
-        launch()
+def OpenWebside():
+    webbrowser.open("https://opengdps.vercel.app/")
 
-createDataFolder()
+root = Tk()
+root.geometry('420x300')
+root.title
+
+OpenGDPS = Label(root, text="OpenGDPS")
+OpenGDPS.pack()
+
+#Launch button
+launchButton = Button(root, text="OpenGDPS", command=launch)
+launchButton.pack()
+# Get Version
+getVersionBtn = Button(root, text="get Version", command=getVersion)
+getVersionBtn.pack()
+
+# createDataFolderBtn = Button(root, text="create Data Folder", command=createDataFolder)
+# createDataFolderBtn.pack()
+
+checkUpdateBtn = Button(root, text="check Update", command=checkUpdate)
+checkUpdateBtn.pack()
+
+OpenDiscordbtn = Button(root, text="Buage. Discord", command=OpenDiscord)
+OpenDiscordbtn.pack()
+
+Website = Button(root, text="Webside", command=OpenWebside)
+Website.pack()
+
+root.mainloop()
