@@ -76,6 +76,7 @@ def download_and_unzip_update(update_url, update_path, openGDPS_directory):
 
         # Unzip the update
         with ZipFile(update_path, 'r') as zip_ref:
+            update_status_var.set("Unzipping OpenGDPS Update File.")
             zip_ref.extractall(openGDPS_directory)
 
         # Update the version file
@@ -105,6 +106,7 @@ def checkUpdate():
 
     if latest_version == current_version:
         print('Up to date.')
+        update_status_var.set("OpenGDPS is up to date.")
     else:
         print('Updating')
 
@@ -128,7 +130,7 @@ def checkUpdate():
         # Create a thread for downloading and unzipping the update
         update_thread = threading.Thread(target=download_and_unzip_update, args=(update_url, update_path, openGDPS_directory))
         update_thread.start()
-
+        update_status_var.set("Updating / Downloading OpenGDPS.")
         print('Update process started in the background.')
 
 def OpenDiscord():
@@ -163,7 +165,7 @@ checkUpdateBtn = Button(root, text="Check Update", command=checkUpdate, width=20
 checkUpdateBtn.pack(side=TOP, pady=5)
 
 # Discord button
-OpenDiscordbtn = Button(root, text="Buage. Discord", command=OpenDiscord, width=20)
+OpenDiscordbtn = Button(root, text="Discord Server", command=OpenDiscord, width=20)
 OpenDiscordbtn.pack(side=TOP, pady=5)
 
 # Website button
